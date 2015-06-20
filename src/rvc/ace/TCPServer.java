@@ -2,12 +2,19 @@ package rvc.ace;
 
 import java.io.*;
 import java.net.*;
+import java.util.Date;
 
 
 
 class TCPServer {
 
 	final static String projectDir = System.getProperty("user.dir");
+	
+	class Task{
+		String id;
+		float complexity;
+		Date added;
+	}
 
 	public static void main(String args[]) throws IOException {
 		String clientSentence = null;
@@ -23,7 +30,7 @@ class TCPServer {
 			inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
 			clientSentence = inFromClient.readLine();
 			if (clientSentence != null)
-				if (clientSentence.equals("1")) {
+				if (clientSentence.equals("3")) {
 					if (outToClient != null) {
 
 						String FileName = "text.java";
@@ -58,7 +65,7 @@ class TCPServer {
 					System.out.println(clientSentence);
 					connectionSocket.close();
 					welcomeSocket.close();
-					return;
+					//return;
 				}
 		}
 	}
