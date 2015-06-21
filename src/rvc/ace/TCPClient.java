@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+
 class TCPClient {
 
 	final static String projectDir = System.getProperty("user.dir");
@@ -28,7 +29,7 @@ class TCPClient {
 	private BufferedReader m_inFromClient = null;
 	private customDataOutputStream m_outputStream = null;
 	private boolean m_busy = false;
-	private boolean m_tasksAvaialble = true;
+	private boolean m_tasksAvailable = true;
 	private Task m_currentTask = null;
 
 	private String m_IP = null;
@@ -85,12 +86,11 @@ class TCPClient {
 				{
 					getTasksList();
 				}
-				if (!m_tasksAvaialble) {
+				if (!m_tasksAvailable) {
 					break;
 				}
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -136,7 +136,7 @@ class TCPClient {
 				m_currentTask = availableTasks.get(0);
 				getFile();
 			} else {
-				m_tasksAvaialble = false;
+				m_tasksAvailable = false;
 			}
 		}
 	}
@@ -148,7 +148,7 @@ class TCPClient {
 			m_outputStream.writeBytes(clientRequests.chooseTask);
 			m_outputStream.writeBytes(m_currentTask.id);
 		} catch (IOException ex) {
-			// Do exception handling
+			ex.printStackTrace();
 		}
 		if (m_inputStream != null) {
 
