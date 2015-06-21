@@ -244,8 +244,8 @@ class TCPClient {
 						if (Files.isRegularFile(filePath)
 								&& filePath.getFileName().toString()
 										.contains(filename) 
-								&& !filePath.getFileName().toString()
-										.contains("Tasks")) {
+								&& !(filePath.getParent().toString()
+										.contains("Tasks"))) {
 							File file = filePath.toFile();
 							file.delete();
 						}
