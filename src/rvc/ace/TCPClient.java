@@ -165,7 +165,7 @@ class TCPClient {
 
 		try {
 			m_outputStream.writeBytes(clientRequests.chooseTask);
-			m_outputStream.writeBytes(m_currentTask.id);
+			m_outputStream.writeBytes(m_currentTask.id+"\n");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -177,16 +177,12 @@ class TCPClient {
 				finish = dataFromServer.indexOf(" ");
 				String fileName = dataFromServer.substring(0, finish);
 				System.out.println(fileName);
-				System.out.println("\n");
 				start = finish + 1;
 				finish = dataFromServer.indexOf(" ", start);
 				String extension = dataFromServer.substring(start, finish);
 				System.out.println(extension);
-				System.out.println("\n");
-				String arguments = dataFromServer.substring(dataFromServer
-						.indexOf(" ", finish + 1));
+				String arguments = dataFromServer.substring(finish + 1);
 				System.out.println(arguments);
-				System.out.println("\n");
 				FileOutputStream fos = null;
 				BufferedOutputStream bos = null;
 				fos = new FileOutputStream(projectDir + "\\" + fileName + "."
@@ -247,10 +243,11 @@ class TCPClient {
 					filePath -> {
 						if (Files.isRegularFile(filePath)
 								&& filePath.getFileName().toString()
-										.contains("sss")) {
+										.contains(filename) 
+								&& !filePath.getFileName().toString()
+										.contains("Tasks")) {
 							File file = filePath.toFile();
 							file.delete();
-							System.out.println(filePath.getFileName());
 						}
 					});
 

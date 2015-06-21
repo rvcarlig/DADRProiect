@@ -133,7 +133,15 @@ class TCPServer {
 				String fileInfo = m_tasksMap.get(taskID);
 				
 				if (fileInfo != null) {
-					File myFile = new File(projectDir + "\\" + fileInfo);
+					int start, finish;
+					finish = fileInfo.indexOf(" ");
+					String fileName = fileInfo.substring(0, finish);
+					start = finish + 1;
+					finish = fileInfo.indexOf(" ", start);
+					String extension = fileInfo.substring(start, finish);
+					DataOutputStream outputString = new DataOutputStream(m_connectionSocket.getOutputStream());
+					outputString.writeBytes(fileInfo);
+					File myFile = new File(projectDir + "\\Tasks\\" + fileName+"."+extension);
 
 					byte[] mybytearray = new byte[(int) myFile.length()];
 
@@ -165,16 +173,17 @@ class TCPServer {
 		}
 	}
 	
-	private void StartListening() throws IOException {
+	private void StartListening() {
 		
 		String clientSentence = "";	
+		try {
+		m_connectionSocket = m_welcomeSocket.accept();
+		
+		m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
+		m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
 		
 		while (true) {			
 
-			m_connectionSocket = m_welcomeSocket.accept();
-			m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
-			m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
-			
 			clientSentence = m_inFromClient.readLine();
 			if (clientSentence != null) {
 				
@@ -190,6 +199,16 @@ class TCPServer {
 					m_connectionSocket.close();
 					m_welcomeSocket.close();
 				}
+			}
+		}
+		} catch (IOException e) {
+			try {
+				m_connectionSocket = m_welcomeSocket.accept();		
+				m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
+				m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
 		}
 	}
