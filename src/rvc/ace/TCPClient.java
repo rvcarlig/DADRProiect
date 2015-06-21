@@ -137,12 +137,12 @@ class TCPClient {
 			if (response.equals("1")) { // server has tasks
 
 				String task = "";
-				do {
-					task = m_inFromClient.readLine();
+				task = m_inFromClient.readLine();
+				while (!task.equals("Finished")) {
 					
 					availableTasks.add(getTaskFromString(task));
-					
-				} while (!task.equals("Finished"));
+					task = m_inFromClient.readLine();
+				};
 				
 				Collections.sort(availableTasks, new Comparator<Task>() {
 					@Override

@@ -102,7 +102,7 @@ class TCPServer {
 	private String GetTasksList() {
 		String list = "";
 		for (Task t : m_tasksList) {
-			list = list + t.GetAsString() + "\n";			
+			list = list + t.GetAsString() ;			
 		}
 		return list;	
 	}
