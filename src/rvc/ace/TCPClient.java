@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 
@@ -62,6 +63,7 @@ class TCPClient {
 	}
 
 	public TCPClient(String ip, int port) {
+
 		try {
 			m_clientSocket = new Socket(ip, port);
 		} catch (IOException e) {
@@ -82,6 +84,7 @@ class TCPClient {
 					m_inputStream));
 
 			while (true) {
+
 				if (!m_busy) // Process requests
 				{
 					getTasksList();
@@ -98,15 +101,26 @@ class TCPClient {
 	private Task getTaskFromString(String task) {
 		Task newTask = new Task();
 		int start = 0, finish = 0;
+		
 		finish = task.indexOf(" ");
 		newTask.id = task.substring(start, finish);
+		
 		start = finish + 1;
 		finish = task.indexOf(" ", start);
 		newTask.complexity = Float.parseFloat(task.substring(start, finish));
+	
 		start = finish + 1;
-		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+		/*DateFormat formatter = new SimpleDateFormat("EEE MMM d HH:mm:ss zzzz yyyy");
+		String strDate = task.substring(start, task.length());
 		try {
-			newTask.added = formatter.parse(task.substring(start));
+			newTask.added = formatter.parse(strDate);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}*/
+		String date_s = "2015-05-18 16:21:00.0";
+        SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        try {
+			newTask.added = dt.parse(date_s);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -114,18 +128,22 @@ class TCPClient {
 	}
 
 	private void getTasksList() throws IOException {
+
 		m_outputStream.writeBytes(clientRequests.requestTasksList);
 		String response;
 		List<Task> availableTasks = new ArrayList<Task>();
 		if (m_inFromClient != null) {
 			response = m_inFromClient.readLine();
 			if (response.equals("1")) { // server has tasks
-				String task = null;
+
+				String task = "";
 				do {
 					task = m_inFromClient.readLine();
-					System.out.println(task);
+					
 					availableTasks.add(getTaskFromString(task));
+					
 				} while (!task.equals("Finished"));
+				
 				Collections.sort(availableTasks, new Comparator<Task>() {
 					@Override
 					public int compare(Task task1, Task task2) {
@@ -134,6 +152,7 @@ class TCPClient {
 				});
 				m_busy = true;
 				m_currentTask = availableTasks.get(0);
+				
 				getFile();
 			} else {
 				m_tasksAvailable = false;
@@ -157,11 +176,17 @@ class TCPClient {
 				int start, finish;
 				finish = dataFromServer.indexOf(" ");
 				String fileName = dataFromServer.substring(0, finish);
+				System.out.println(fileName);
+				System.out.println("\n");
 				start = finish + 1;
 				finish = dataFromServer.indexOf(" ", start);
 				String extension = dataFromServer.substring(start, finish);
+				System.out.println(extension);
+				System.out.println("\n");
 				String arguments = dataFromServer.substring(dataFromServer
 						.indexOf(" ", finish + 1));
+				System.out.println(arguments);
+				System.out.println("\n");
 				FileOutputStream fos = null;
 				BufferedOutputStream bos = null;
 				fos = new FileOutputStream(projectDir + "\\" + fileName + "."
@@ -179,7 +204,7 @@ class TCPClient {
 				System.out.println("Finished receiving!");
 				executeFile(fileName, extension, arguments);
 			} catch (IOException ex) {
-				// Do exception handling
+				ex.printStackTrace();
 			}
 
 		}

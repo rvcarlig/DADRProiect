@@ -9,8 +9,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream.GetField;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,15 +22,15 @@ import java.util.Map;
 
 
 class Task{
-	String id;
-	float complexity;
-	Date added;
+	public String id;
+	public float complexity;
+	public Date added;
 	
 	public Task() {
 		
 	}
-	@Override public String toString()	{
-		return id + " " + String.valueOf(complexity)+ " " + added.toString();
+	public String GetAsString()	{
+		return (id + " " + String.valueOf(complexity) + " " + added.toString() + "\n");
 	}
 	
 	public int compareTo(Task other)	{
@@ -38,9 +41,12 @@ class Task{
 class TCPServer {
 
 	final static String projectDir = System.getProperty("user.dir");
-	private ServerSocket welcomeSocket = null;
-	private Map<String, String> tasksMap = new HashMap<String, String>();
-	private List<Task> tasksList = new ArrayList<Task>();
+	private ServerSocket m_welcomeSocket = null;
+	private Map<String, String> m_tasksMap = new HashMap<String, String>();
+	private List<Task> m_tasksList = new ArrayList<Task>();
+	private Socket m_connectionSocket = null;
+	private BufferedOutputStream m_outToClient = null;
+	private BufferedReader m_inFromClient = null;
 	
 	public enum serverResponses {
 		tasksAvailable("1\n"), tasksUnavailable("2\n");
@@ -59,113 +65,130 @@ class TCPServer {
 	
 	public TCPServer() {
 		try {
-			welcomeSocket = new ServerSocket(3248);
+			m_welcomeSocket = new ServerSocket(3248);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		CreateTasks();
-		GetTasksList();
 	}
 	
-	private void CreateTasks() {		
+	public void CreateTasks() {	
 		Task tsk = new Task();
 		tsk.id = "1";
 		tsk.complexity = 0.0f;
-		tsk.added = new Date(System.currentTimeMillis());
-		tasksList.add(tsk);
-		tasksMap.put(tsk.id, "text java");
+		String date_s = "2015-05-18 16:21:00.0";
+        SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        try {
+			tsk.added = dt.parse(date_s);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		m_tasksList.add(tsk);
+		m_tasksMap.put(tsk.id, "text java ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f\n");
+		
+		/*tsk = new Task();
+		tsk.id = "2";
+		tsk.complexity = 0.0f;
+		date_s = "2015-06-11 12:41:00.0";
+        try {
+			tsk.added = dt.parse(date_s);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		m_tasksList.add(tsk);
+		m_tasksMap.put(tsk.id, "text java ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f");
+		*/
 	}
 	
 	private String GetTasksList() {
 		String list = "";
-		for (Task task : tasksList) {
-			list.concat(task.toString());			
-			list.concat("\n");
+		for (Task t : m_tasksList) {
+			list = list + t.GetAsString() + "\n";			
 		}
-		return list;
-		
+		return list;	
 	}
 	
+	private void SendTasksList() throws IOException {
+		
+		if (m_outToClient != null) {
+			String tasks = GetTasksList();
+			DataOutputStream outputString = new DataOutputStream(m_connectionSocket.getOutputStream());
+			if (!m_tasksMap.isEmpty()) {
+				outputString.writeBytes(serverResponses.tasksAvailable.toString()); // tasks available
+				outputString.writeBytes(tasks);	
+				outputString.writeBytes("Finished\n");
+			} else {
+				outputString.writeBytes(serverResponses.tasksUnavailable.toString()); // tasks unavailable
+			}
+		}
+	}
+	
+	private void SendTask() throws IOException {
+		if (m_outToClient != null) {						
+			
+			if (m_tasksMap.isEmpty()) {
+				DataOutputStream outputString = new DataOutputStream(m_connectionSocket.getOutputStream());
+				outputString.writeBytes("No more tasks available.");
+			} else {
+				String taskID = m_inFromClient.readLine();
+				String fileInfo = m_tasksMap.get(taskID);
+				
+				if (fileInfo != null) {
+					File myFile = new File(projectDir + "\\" + fileInfo);
+
+					byte[] mybytearray = new byte[(int) myFile.length()];
+
+					FileInputStream fis = null;
+
+					try {
+						fis = new FileInputStream(myFile);
+					} catch (FileNotFoundException ex) {
+						ex.printStackTrace();
+					}
+					BufferedInputStream bis = new BufferedInputStream(fis);
+
+					try {
+						bis.read(mybytearray, 0, mybytearray.length);
+						m_outToClient.write(mybytearray, 0,
+								mybytearray.length);
+						
+						m_outToClient.flush();
+						m_outToClient.close();
+						System.out.println("Finished sending!");
+
+						m_tasksMap.remove(taskID);
+						
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
+			}
+		}
+	}
 	
 	private void StartListening() throws IOException {
-		String clientSentence = null;		
-		while (true) {
-			Socket connectionSocket = null;
-			BufferedOutputStream outToClient = null;
-			BufferedReader inFromClient = null;
+		
+		String clientSentence = "";	
+		
+		while (true) {			
 
-			connectionSocket = welcomeSocket.accept();
-			outToClient = new BufferedOutputStream(connectionSocket.getOutputStream());
-			inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+			m_connectionSocket = m_welcomeSocket.accept();
+			m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
+			m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
 			
-			clientSentence = inFromClient.readLine();
+			clientSentence = m_inFromClient.readLine();
 			if (clientSentence != null) {
 				
 				if (clientSentence.equals("1")) { // requestTasksList
-					if (outToClient != null) {
-						String tasks = GetTasksList();
-						DataOutputStream outputString = new DataOutputStream(connectionSocket.getOutputStream());
-						if (!tasksMap.isEmpty())
-							outputString.writeBytes(serverResponses.tasksAvailable.toString()); // tasks available
-						else 
-							outputString.writeBytes(serverResponses.tasksUnavailable.toString()); // tasks unavailable
-						outputString.writeBytes(tasks);	
-						outputString.writeBytes("Finished");
-					}
+					SendTasksList();
 				}
 				else if (clientSentence.equals("2")) { // choose task
-					
-					if (outToClient != null) {						
-						
-						if (tasksMap.isEmpty()) {
-							DataOutputStream outputString = new DataOutputStream(connectionSocket.getOutputStream());
-							outputString.writeBytes("No more tasks available.");
-						} else {
-							String taskID = inFromClient.readLine();
-							//String FileName = "text.java";
-							String fileInfo = tasksMap.get(taskID);
-							
-							if (fileInfo != null) {
-								File myFile = new File(projectDir + "\\" + fileInfo);
-			
-								byte[] mybytearray = new byte[(int) myFile.length()];
-			
-								FileInputStream fis = null;
-			
-								try {
-									fis = new FileInputStream(myFile);
-								} catch (FileNotFoundException ex) {
-									ex.printStackTrace();
-								}
-								BufferedInputStream bis = new BufferedInputStream(fis);
-			
-								try {
-									bis.read(mybytearray, 0, mybytearray.length);
-									outToClient.write(mybytearray, 0,
-											mybytearray.length);
-									
-									outToClient.flush();
-									outToClient.close();
-									System.out.println("Finished sending!");
-			
-									tasksMap.remove(taskID);
-									
-								} catch (IOException ex) {
-									ex.printStackTrace();
-								}
-							} else {
-								//DataOutputStream outputString = new DataOutputStream(connectionSocket.getOutputStream());
-								//outputString.writeBytes("Task unavailable.");
-							}
-						}
-					}
+					SendTask();					
 				}
 				else { // file output
 					System.out.println("Result: ");
 					System.out.println(clientSentence);
-					connectionSocket.close();
-					welcomeSocket.close();
+					m_connectionSocket.close();
+					m_welcomeSocket.close();
 				}
 			}
 		}
@@ -173,6 +196,8 @@ class TCPServer {
 	
 	public static void main(String args[]) throws IOException {
 		TCPServer server = new TCPServer();
+		
+		server.CreateTasks();
 		server.StartListening();
 	}
 }
