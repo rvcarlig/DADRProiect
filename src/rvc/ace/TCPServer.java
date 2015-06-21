@@ -1,20 +1,36 @@
 package rvc.ace;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Date;
 
-
+class Task{
+	String id;
+	float complexity;
+	Date added;
+	
+	@Override public String toString()	{
+		return id + " " + String.valueOf(complexity)+ " " + added.toString();
+	}
+	
+	public int compareTo(Task other)	{
+		return (int) (other.complexity-this.complexity);
+	}
+}
 
 class TCPServer {
 
 	final static String projectDir = System.getProperty("user.dir");
 	
-	class Task{
-		String id;
-		float complexity;
-		Date added;
-	}
+	
 
 	public static void main(String args[]) throws IOException {
 		String clientSentence = null;
