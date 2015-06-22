@@ -167,7 +167,8 @@ class TCPServer {
 	private String GetTasksList() {
 		String list = "";
 		for (Task t : m_tasksList) {
-			list = list + t.GetAsString();
+			if(m_tasksMap.containsKey(t.id))
+				list = list + t.GetAsString();
 		}
 		return list;
 	}
@@ -231,7 +232,7 @@ class TCPServer {
 					String extension = fileInfo.substring(start, finish);
 					DataOutputStream outputString = new DataOutputStream(
 							m_connectionSocket.getOutputStream());
-					outputString.writeBytes(fileInfo);
+					outputString.writeBytes(fileInfo+"\n");
 					File myFile = new File(projectDir + "\\Tasks\\" + fileName
 							+ "." + extension);
 
