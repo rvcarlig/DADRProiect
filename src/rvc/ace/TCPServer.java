@@ -47,6 +47,7 @@ class TCPServer {
 	private Socket m_connectionSocket = null;
 	private BufferedOutputStream m_outToClient = null;
 	private BufferedReader m_inFromClient = null;
+	private boolean m_taskAvailable = true;
 	
 	public enum serverResponses {
 		tasksAvailable("1\n"), tasksUnavailable("2\n");
@@ -108,7 +109,6 @@ class TCPServer {
 	}
 	
 	private void SendTasksList() throws IOException {
-		
 		if (m_outToClient != null) {
 			String tasks = GetTasksList();
 			DataOutputStream outputString = new DataOutputStream(m_connectionSocket.getOutputStream());
@@ -118,6 +118,7 @@ class TCPServer {
 				outputString.writeBytes("Finished\n");
 			} else {
 				outputString.writeBytes(serverResponses.tasksUnavailable.toString()); // tasks unavailable
+				m_taskAvailable = false;
 			}
 		}
 	}
@@ -162,6 +163,10 @@ class TCPServer {
 						m_outToClient.flush();
 						m_outToClient.close();
 						System.out.println("Finished sending!");
+						
+						m_connectionSocket = m_welcomeSocket.accept();						
+						m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
+						m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
 
 						m_tasksMap.remove(taskID);
 						
@@ -183,7 +188,13 @@ class TCPServer {
 		m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
 		
 		while (true) {			
-
+			if(!m_taskAvailable)
+			{
+				System.out.println("Server Closing!");
+				m_connectionSocket.close();
+				m_welcomeSocket.close();			
+				break;	
+			}
 			clientSentence = m_inFromClient.readLine();
 			if (clientSentence != null) {
 				
@@ -193,23 +204,15 @@ class TCPServer {
 				else if (clientSentence.equals("2")) { // choose task
 					SendTask();					
 				}
-				else { // file output
-					System.out.println("Result: ");
-					System.out.println(clientSentence);
-					m_connectionSocket.close();
-					m_welcomeSocket.close();
+				
+				else if (clientSentence.equals("3")){ // file output
+					clientSentence = m_inFromClient.readLine();
+					System.out.println("Result: "+clientSentence);
 				}
 			}
 		}
 		} catch (IOException e) {
-			try {
-				m_connectionSocket = m_welcomeSocket.accept();		
-				m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
-				m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			e.printStackTrace();
 		}
 	}
 	
