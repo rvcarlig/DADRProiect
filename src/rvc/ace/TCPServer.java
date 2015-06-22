@@ -38,6 +38,10 @@ class Task{
 	}
 }
 
+/** 
+ * The TCPServer class implements a server that distributes
+ * tasks to clients.
+ */
 class TCPServer {
 
 	final static String projectDir = System.getProperty("user.dir");
@@ -64,6 +68,9 @@ class TCPServer {
 		}
 	};
 	
+	/** 
+	 * The TCPServer Constructor
+	 */
 	public TCPServer() {
 		try {
 			m_welcomeSocket = new ServerSocket(3248);
@@ -71,7 +78,13 @@ class TCPServer {
 			e.printStackTrace();
 		}
 	}
-	
+	/** 
+	 * CreateTasks method
+	 * This is the method where the list of tasks is created and mapped.
+	 * For each task available there is a java file that represents the 
+	 * code that will be sent to clients.
+	 * @return      void
+	 */
 	public void CreateTasks() {	
 		Task tsk = new Task();
 		tsk.id = "1";
@@ -85,21 +98,15 @@ class TCPServer {
 		}
 		m_tasksList.add(tsk);
 		m_tasksMap.put(tsk.id, "text java ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f\n");
-		
-		/*tsk = new Task();
-		tsk.id = "2";
-		tsk.complexity = 0.0f;
-		date_s = "2015-06-11 12:41:00.0";
-        try {
-			tsk.added = dt.parse(date_s);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		m_tasksList.add(tsk);
-		m_tasksMap.put(tsk.id, "text java ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f");
-		*/
 	}
-	
+	/** 
+	 * GetTasksList method
+	 * This method concatenates all the available tasks; on a line are the 
+	 * three characteristics of a task: id, estimated complexity and the 
+	 * date when it was added. Is is used when a client requests the list 
+	 * of tasks to obtain the concatenated string in order to be sent to the client.
+	 * @return      the concatenated string containing all available tasks
+	 */
 	private String GetTasksList() {
 		String list = "";
 		for (Task t : m_tasksList) {
@@ -107,7 +114,15 @@ class TCPServer {
 		}
 		return list;	
 	}
-	
+	/** 
+	 * SendTasksList method
+	 * This method is responsible if sending the list of available tasks to 
+	 * the client that requested it. It verifies if there are tasks available 
+	 * and sends the appropiate response to the client and if there are tasks 
+	 * available, it gets the concatenated string by calling the GetTasksList 
+	 * method and sends it through a DataOutputStream to the client.
+	 * @return      void
+	 */
 	private void SendTasksList() throws IOException {
 		if (m_outToClient != null) {
 			String tasks = GetTasksList();
@@ -122,7 +137,16 @@ class TCPServer {
 			}
 		}
 	}
-	
+	/** 
+	 * SendTask method
+	 * This method is responsible for sending the java file for the corresponding 
+	 * task that was requested by a client. It first receives the id of the task 
+	 * requested and then it retrieves and sends to the client the information 
+	 * about that task (name of the file corresponding to the task, the extension 
+	 * of the file and the arguments needed to run the file). Afterwards, the file 
+	 * is sent to the client and it is removed from the list of available tasks.
+	 * @return      void
+	 */
 	private void SendTask() throws IOException {
 		if (m_outToClient != null) {						
 			
@@ -177,40 +201,46 @@ class TCPServer {
 			}
 		}
 	}
-	
+	/** 
+	 * StartListening method
+	 * This method sets up the connection between server and clients. 
+	 * It receives the requests from clients and calls the appropiate 
+	 * functions to deal with the requests. The method also receives the 
+	 * result of the taks sent by a client and prints it in the console.
+	 * @return      void
+	 */
 	private void StartListening() {
 		
-		String clientSentence = "";	
 		try {
-		m_connectionSocket = m_welcomeSocket.accept();
-		
-		m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
-		m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
-		
-		while (true) {			
-			if(!m_taskAvailable)
-			{
-				System.out.println("Server Closing!");
-				m_connectionSocket.close();
-				m_welcomeSocket.close();			
-				break;	
+			m_connectionSocket = m_welcomeSocket.accept();
+			
+			m_outToClient = new BufferedOutputStream(m_connectionSocket.getOutputStream());
+			m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
+
+			String clientSentence = "";	
+			while (true) {			
+				if(!m_taskAvailable)
+				{
+					System.out.println("Server Closing!");
+					m_connectionSocket.close();
+					m_welcomeSocket.close();			
+					break;	
+				}
+				clientSentence = m_inFromClient.readLine();
+				if (clientSentence != null) {
+					
+					if (clientSentence.equals("1")) { // requestTasksList
+						SendTasksList();
+					}
+					else if (clientSentence.equals("2")) { // choose task
+						SendTask();					
+					}				
+					else if (clientSentence.equals("3")){ // file output
+						clientSentence = m_inFromClient.readLine();
+						System.out.println("Result: "+clientSentence);
+					}
+				}
 			}
-			clientSentence = m_inFromClient.readLine();
-			if (clientSentence != null) {
-				
-				if (clientSentence.equals("1")) { // requestTasksList
-					SendTasksList();
-				}
-				else if (clientSentence.equals("2")) { // choose task
-					SendTask();					
-				}
-				
-				else if (clientSentence.equals("3")){ // file output
-					clientSentence = m_inFromClient.readLine();
-					System.out.println("Result: "+clientSentence);
-				}
-			}
-		}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

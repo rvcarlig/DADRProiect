@@ -21,13 +21,17 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-
+/** 
+ * The TCPClient class implements a client that receives tasks from
+ * a server. It compiles and runs the tasks and send the results
+ * back to the server that sent them.
+ */
 class TCPClient {
 
 	final static String projectDir = System.getProperty("user.dir");
 	private Socket m_clientSocket = null;
 	private InputStream m_inputStream = null;
-	private BufferedReader m_inFromClient = null;
+	private BufferedReader m_inFromServer = null;
 	private customDataOutputStream m_outputStream = null;
 	private boolean m_busy = false;
 	private boolean m_tasksAvailable = true;
@@ -79,7 +83,7 @@ class TCPClient {
 				m_clientSocket.getOutputStream());
 
 		m_inputStream = m_clientSocket.getInputStream();
-		m_inFromClient = new BufferedReader(new InputStreamReader(
+		m_inFromServer = new BufferedReader(new InputStreamReader(
 				m_inputStream));
 	}
 
@@ -143,16 +147,16 @@ class TCPClient {
 		
 		String response;
 		List<Task> availableTasks = new ArrayList<Task>();
-		if (m_inFromClient != null) {
-			response = m_inFromClient.readLine();
+		if (m_inFromServer != null) {
+			response = m_inFromServer.readLine();
 			if (response.equals("1")) { // server has tasks
 
 				String task = "";
-				task = m_inFromClient.readLine();
+				task = m_inFromServer.readLine();
 				while (!task.equals("Finished")) {
 					
 					availableTasks.add(getTaskFromString(task));
-					task = m_inFromClient.readLine();
+					task = m_inFromServer.readLine();
 				};
 				
 				Collections.sort(availableTasks, new Comparator<Task>() {
@@ -189,7 +193,7 @@ class TCPClient {
 		if (m_inputStream != null) {
 
 			try {
-				String dataFromServer = m_inFromClient.readLine();
+				String dataFromServer = m_inFromServer.readLine();
 				int start, finish;
 				finish = dataFromServer.indexOf(" ");
 				String fileName = dataFromServer.substring(0, finish);
