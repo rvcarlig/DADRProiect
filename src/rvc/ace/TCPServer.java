@@ -85,6 +85,7 @@ class TCPServer {
 	final static String projectDir = System.getProperty("user.dir");
 	private ServerSocket m_welcomeSocket = null;
 	private Map<String, String> m_tasksMap = new HashMap<String, String>();
+	private Map<String, byte[]> m_fileCache = new HashMap<String, byte[]>();
 	private List<Task> m_tasksList = new ArrayList<Task>();
 	private Socket m_connectionSocket = null;
 	private BufferedOutputStream m_outToClient = null;
@@ -167,7 +168,7 @@ class TCPServer {
 	private String GetTasksList() {
 		String list = "";
 		for (Task t : m_tasksList) {
-			if(m_tasksMap.containsKey(t.id))
+			if (m_tasksMap.containsKey(t.id))
 				list = list + t.GetAsString();
 		}
 		return list;
@@ -232,41 +233,43 @@ class TCPServer {
 					String extension = fileInfo.substring(start, finish);
 					DataOutputStream outputString = new DataOutputStream(
 							m_connectionSocket.getOutputStream());
-					outputString.writeBytes(fileInfo+"\n");
+					outputString.writeBytes(fileInfo + "\n");
 					File myFile = new File(projectDir + "\\Tasks\\" + fileName
 							+ "." + extension);
 
-					byte[] mybytearray = new byte[(int) myFile.length()];
+					byte[] mybytearray;
+					if (m_fileCache.containsKey(fileName)) {
+						mybytearray = m_fileCache.get(fileName);
+					} else {
+						mybytearray = new byte[(int) myFile.length()];
 
-					FileInputStream fis = null;
+						FileInputStream fis = null;
 
-					try {
-						fis = new FileInputStream(myFile);
-					} catch (FileNotFoundException ex) {
-						ex.printStackTrace();
-					}
-					BufferedInputStream bis = new BufferedInputStream(fis);
+						try {
+							fis = new FileInputStream(myFile);
+						} catch (FileNotFoundException ex) {
+							ex.printStackTrace();
+						}
+						BufferedInputStream bis = new BufferedInputStream(fis);
 
-					try {
 						bis.read(mybytearray, 0, mybytearray.length);
-						m_outToClient.write(mybytearray, 0, mybytearray.length);
-
-						m_outToClient.flush();
-						m_outToClient.close();
-						System.out.println("Finished sending!");
-
-						m_connectionSocket = m_welcomeSocket.accept();
-						m_outToClient = new BufferedOutputStream(
-								m_connectionSocket.getOutputStream());
-						m_inFromClient = new BufferedReader(
-								new InputStreamReader(
-										m_connectionSocket.getInputStream()));
-
-						m_tasksMap.remove(taskID);
-
-					} catch (IOException ex) {
-						ex.printStackTrace();
+						m_fileCache.put(fileName, mybytearray);
+						bis.close();
+						fis.close();
 					}
+					m_outToClient.write(mybytearray, 0, mybytearray.length);
+
+					m_outToClient.flush();
+					m_outToClient.close();
+					System.out.println("Finished sending!");
+
+					m_connectionSocket = m_welcomeSocket.accept();
+					m_outToClient = new BufferedOutputStream(
+							m_connectionSocket.getOutputStream());
+					m_inFromClient = new BufferedReader(new InputStreamReader(
+							m_connectionSocket.getInputStream()));
+
+					m_tasksMap.remove(taskID);
 				}
 			}
 		}

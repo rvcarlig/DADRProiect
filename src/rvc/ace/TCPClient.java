@@ -242,7 +242,7 @@ class TCPClient {
 	 * @return void
 	 */
 	private void executeFile(String filename, String extension, String arguments) {
-
+		boolean error = false;
 		try {
 			if (extension.equals("java")) {
 				Process compile;
@@ -257,7 +257,7 @@ class TCPClient {
 			p = Runtime.getRuntime()
 					.exec("java -cp " + projectDir + " " + filename + " "
 							+ arguments);
-
+			
 			p.waitFor();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
 					p.getInputStream()));
@@ -269,9 +269,11 @@ class TCPClient {
 			}
 			while ((line = reade2r.readLine()) != null) {
 				System.err.println(line);
+				error = true;
 			}
 			p.destroy();
-
+			
+			if(!error)
 			Files.walk(Paths.get(projectDir)).forEach(
 					filePath -> {
 						if (Files.isRegularFile(filePath)
