@@ -76,7 +76,11 @@ class TCPClient {
 		m_IP = ip;
 		m_port = port;
 	}
-	
+	/** 
+	 * restartStreams method
+	 * This method restarts the streams for the client-server communication.
+	 * @return      void
+	 */	
 	private void restartStreams() throws IOException
 	{
 		m_outputStream = new customDataOutputStream(
@@ -87,6 +91,17 @@ class TCPClient {
 				m_inputStream));
 	}
 
+	/** 
+	 * startListening method
+	 * This method communicates with the server. When the client is not busy, 
+	 * it requests makes requests while there are still tasks available on 
+	 * the server. Requests are made by calling the getTasksList method that 
+	 * receives the list of tasks available, chooses a task, runs the code 
+	 * and returns the result. When there are no more tasks available, the 
+	 * method returns and it means that all the tasks were processed and 
+	 * the results were sent to the server.
+	 * @return      void
+	 */	
 	public void startListening() {
 		if(m_clientSocket==null)
 			return;
@@ -110,6 +125,13 @@ class TCPClient {
 		}
 	}
 
+	/** 
+	 * getTaskFromString method
+	 * This method receives an available tasks as a concatenated string. 
+	 * It deserializes the data, creates Task object from it and return it.
+	 * @param	task	a string containing the info about a task
+	 * @return      returns the task object created
+	 */	
 	private Task getTaskFromString(String task) {
 		Task newTask = new Task();
 		int start = 0, finish = 0;
@@ -139,6 +161,14 @@ class TCPClient {
 		return newTask;
 	}
 
+	/** 
+	 * getTasksList method
+	 * This method collects the list of available tasks from server. 
+	 * It also sorts the tasks and chooses the apropiate task to be 
+	 * requested from the server by calling the getFile method. 
+	 * The client is now set to ‚busy’ until the task is done.
+	 * @return      void
+	 */	
 	private void getTasksList() {
 
 		try {
@@ -181,6 +211,14 @@ class TCPClient {
 		}
 	}
 
+	/** 
+	 * getFile method
+	 * This method requests from server the chosen task to be resolved. 
+	 * Then, it receives the info about the task and the file to run. 
+	 * After it finishes receiving, it calls the executeFile method where 
+	 * the code is executed and the result is received.
+	 * @return      void
+	 */	
 	private void getFile() {
 		byte[] aByte = new byte[4];
 
@@ -224,6 +262,17 @@ class TCPClient {
 		}
 	}
 
+	/** 
+	 * executeFile method
+	 * This method compiles and runs the file corresponding to the current task. 
+	 * After it receives the result, it calls the sendResult method which sends 
+	 * the result to the server. It also deletes the file received for the 
+	 * current task, since the result was received and the file is no longer needed.
+	 * @param	fileName	a string containing the file name corresponding to the current task
+	 * @param	extension	a string containing the extension of the file
+	 * @param	arguments	a string containing the arguments 
+	 * @return      		void
+	 */
 	private void executeFile(String filename, String extension, String arguments) {
 
 		try {
@@ -274,6 +323,12 @@ class TCPClient {
 		}
 	}
 
+	/** 
+	 * sendResult method
+	 * This method receives the result of the current task and sends it to the server from which it was requested.
+	 * @param	result	a string containing the result to be sent to the server
+	 * @return      	void
+	 */
 	private void sendResult(String result) {
 		try {
 			m_clientSocket = new Socket(m_IP, m_port);
