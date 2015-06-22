@@ -12,19 +12,15 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
-/** 
- * The TCPClient class implements a client that receives tasks from
- * a server. It compiles and runs the tasks and send the results
- * back to the server that sent them.
+/**
+ * The TCPClient class implements a client that receives tasks from a server. It
+ * compiles and runs the tasks and send the results back to the server that sent
+ * them.
  */
 class TCPClient {
 
@@ -76,34 +72,35 @@ class TCPClient {
 		m_IP = ip;
 		m_port = port;
 	}
-	/** 
-	 * restartStreams method
-	 * This method restarts the streams for the client-server communication.
-	 * @return      void
-	 */	
-	private void restartStreams() throws IOException
-	{
+
+	/**
+	 * restartStreams method This method restarts the streams for the
+	 * client-server communication.
+	 * 
+	 * @return void
+	 */
+	private void restartStreams() throws IOException {
 		m_outputStream = new customDataOutputStream(
 				m_clientSocket.getOutputStream());
 
 		m_inputStream = m_clientSocket.getInputStream();
-		m_inFromServer = new BufferedReader(new InputStreamReader(
-				m_inputStream));
+		m_inFromServer = new BufferedReader(
+				new InputStreamReader(m_inputStream));
 	}
 
-	/** 
-	 * startListening method
-	 * This method communicates with the server. When the client is not busy, 
-	 * it requests makes requests while there are still tasks available on 
-	 * the server. Requests are made by calling the getTasksList method that 
-	 * receives the list of tasks available, chooses a task, runs the code 
-	 * and returns the result. When there are no more tasks available, the 
-	 * method returns and it means that all the tasks were processed and 
-	 * the results were sent to the server.
-	 * @return      void
-	 */	
+	/**
+	 * startListening method This method communicates with the server. When the
+	 * client is not busy, it requests makes requests while there are still
+	 * tasks available on the server. Requests are made by calling the
+	 * getTasksList method that receives the list of tasks available, chooses a
+	 * task, runs the code and returns the result. When there are no more tasks
+	 * available, the method returns and it means that all the tasks were
+	 * processed and the results were sent to the server.
+	 * 
+	 * @return void
+	 */
 	public void startListening() {
-		if(m_clientSocket==null)
+		if (m_clientSocket == null)
 			return;
 		try {
 			restartStreams();
@@ -116,7 +113,7 @@ class TCPClient {
 				}
 				if (!m_tasksAvailable) {
 					m_clientSocket.close();
-					System.out.println("closing client: "+m_port);
+					System.out.println("closing client: " + m_port);
 					break;
 				}
 			}
@@ -125,106 +122,72 @@ class TCPClient {
 		}
 	}
 
-	/** 
-	 * getTaskFromString method
-	 * This method receives an available tasks as a concatenated string. 
-	 * It deserializes the data, creates Task object from it and return it.
-	 * @param	task	a string containing the info about a task
-	 * @return      returns the task object created
-	 */	
-	private Task getTaskFromString(String task) {
-		Task newTask = new Task();
-		int start = 0, finish = 0;
-		
-		finish = task.indexOf(" ");
-		newTask.id = task.substring(start, finish);
-		
-		start = finish + 1;
-		finish = task.indexOf(" ", start);
-		newTask.complexity = Float.parseFloat(task.substring(start, finish));
-	
-		start = finish + 1;
-		/*DateFormat formatter = new SimpleDateFormat("EEE MMM d HH:mm:ss zzzz yyyy");
-		String strDate = task.substring(start, task.length());
-		try {
-			newTask.added = formatter.parse(strDate);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}*/
-		String date_s = "2015-05-18 16:21:00.0";
-        SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        try {
-			newTask.added = dt.parse(date_s);
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
-		return newTask;
-	}
-
-	/** 
-	 * getTasksList method
-	 * This method collects the list of available tasks from server. 
-	 * It also sorts the tasks and chooses the apropiate task to be 
-	 * requested from the server by calling the getFile method. 
-	 * The client is now set to ‚busy’ until the task is done.
-	 * @return      void
-	 */	
+	/**
+	 * getTasksList method This method collects the list of available tasks from
+	 * server. It also sorts the tasks and chooses the apropiate task to be
+	 * requested from the server by calling the getFile method. The client is
+	 * now set to ‚busy’ until the task is done.
+	 * 
+	 * @return void
+	 */
 	private void getTasksList() {
 
 		try {
 			m_outputStream.writeBytes(clientRequests.requestTasksList);
 			System.out.println("Requesting task list....");
-		
-		String response;
-		List<Task> availableTasks = new ArrayList<Task>();
-		if (m_inFromServer != null) {
-			response = m_inFromServer.readLine();
-			if (response.equals("1")) { // server has tasks
 
-				String task = "";
-				task = m_inFromServer.readLine();
-				while (!task.equals("Finished")) {
-					
-					availableTasks.add(getTaskFromString(task));
+			String response;
+			List<Task> availableTasks = new ArrayList<Task>();
+			if (m_inFromServer != null) {
+				response = m_inFromServer.readLine();
+				if (response.equals("1")) { // server has tasks
+
+					String task = "";
 					task = m_inFromServer.readLine();
-				};
-				
-				Collections.sort(availableTasks, new Comparator<Task>() {
-					@Override
-					public int compare(Task task1, Task task2) {
-						return task1.compareTo(task2);
+					while (!task.equals("Finished")) {
+
+						availableTasks.add(Task.getTaskFromString(task));
+						task = m_inFromServer.readLine();
 					}
-				});
-				m_busy = true;
-				m_currentTask = availableTasks.get(0);
-				m_tasksAvailable=true;
-				System.out.println("Finished receiving task info....");
-				
-				getFile();
-			} else {
-				m_tasksAvailable = false;
+					;
+
+					Collections.sort(availableTasks, new Comparator<Task>() {
+						@Override
+						public int compare(Task task1, Task task2) {
+							return task1.compareTo(task2);
+						}
+					});
+					m_busy = true;
+					m_currentTask = availableTasks.get(0);
+					m_tasksAvailable = true;
+					System.out.println("Finished receiving task info....");
+					m_currentTask.print();
+
+					getFile();
+				} else {
+					m_tasksAvailable = false;
+				}
 			}
-		}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	/** 
-	 * getFile method
-	 * This method requests from server the chosen task to be resolved. 
-	 * Then, it receives the info about the task and the file to run. 
-	 * After it finishes receiving, it calls the executeFile method where 
-	 * the code is executed and the result is received.
-	 * @return      void
-	 */	
+	/**
+	 * getFile method This method requests from server the chosen task to be
+	 * resolved. Then, it receives the info about the task and the file to run.
+	 * After it finishes receiving, it calls the executeFile method where the
+	 * code is executed and the result is received.
+	 * 
+	 * @return void
+	 */
 	private void getFile() {
 		byte[] aByte = new byte[4];
 
 		try {
 			m_outputStream.writeBytes(clientRequests.chooseTask);
-			m_outputStream.writeBytes(m_currentTask.id+"\n");
+			m_outputStream.writeBytes(m_currentTask.id + "\n");
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -262,16 +225,21 @@ class TCPClient {
 		}
 	}
 
-	/** 
-	 * executeFile method
-	 * This method compiles and runs the file corresponding to the current task. 
-	 * After it receives the result, it calls the sendResult method which sends 
-	 * the result to the server. It also deletes the file received for the 
-	 * current task, since the result was received and the file is no longer needed.
-	 * @param	fileName	a string containing the file name corresponding to the current task
-	 * @param	extension	a string containing the extension of the file
-	 * @param	arguments	a string containing the arguments 
-	 * @return      		void
+	/**
+	 * executeFile method This method compiles and runs the file corresponding
+	 * to the current task. After it receives the result, it calls the
+	 * sendResult method which sends the result to the server. It also deletes
+	 * the file received for the current task, since the result was received and
+	 * the file is no longer needed.
+	 * 
+	 * @param fileName
+	 *            a string containing the file name corresponding to the current
+	 *            task
+	 * @param extension
+	 *            a string containing the extension of the file
+	 * @param arguments
+	 *            a string containing the arguments
+	 * @return void
 	 */
 	private void executeFile(String filename, String extension, String arguments) {
 
@@ -308,7 +276,7 @@ class TCPClient {
 					filePath -> {
 						if (Files.isRegularFile(filePath)
 								&& filePath.getFileName().toString()
-										.contains(filename) 
+										.contains(filename)
 								&& !(filePath.getParent().toString()
 										.contains("Tasks"))) {
 							File file = filePath.toFile();
@@ -323,11 +291,13 @@ class TCPClient {
 		}
 	}
 
-	/** 
-	 * sendResult method
-	 * This method receives the result of the current task and sends it to the server from which it was requested.
-	 * @param	result	a string containing the result to be sent to the server
-	 * @return      	void
+	/**
+	 * sendResult method This method receives the result of the current task and
+	 * sends it to the server from which it was requested.
+	 * 
+	 * @param result
+	 *            a string containing the result to be sent to the server
+	 * @return void
 	 */
 	private void sendResult(String result) {
 		try {
