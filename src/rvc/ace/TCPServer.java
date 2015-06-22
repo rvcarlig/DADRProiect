@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 class Task {
@@ -66,7 +67,7 @@ class Task {
 
 		start = finish + 1;
 		DateFormat formatter = new SimpleDateFormat(
-				"EEE MMM d HH:mm:ss zzzz yyyy");
+				"EEE MMM d HH:mm:ss zzzz yyyy",Locale.ENGLISH);
 		String strDate = task.substring(start, task.length());
 		try {
 			newTask.added = formatter.parse(strDate);
