@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Task class - holds information about tasks.
+ */
 class Task {
 	public String id;
 	public float complexity;
@@ -46,13 +49,13 @@ class Task {
 	}
 
 	/**
-	 * getTaskFromString method This method receives an available tasks as a
+	 * getTaskFromString method - receives an available tasks as a
 	 * concatenated string. It transforms the data into a Task object and
 	 * returns the task.
 	 * 
-	 * @param task
-	 *            a string containing the info about a task
-	 * @return returns the task object created
+	 * @param	task   
+	 * 			 a string containing the info about a task
+	 * @return 			returns the task object created
 	 */
 	static Task getTaskFromString(String task) {
 		Task newTask = new Task();
@@ -79,7 +82,7 @@ class Task {
 }
 
 /**
- * The TCPServer class implements a server that distributes tasks to clients.
+ * The TCPServer class - implements a server that distributes tasks to clients.
  */
 class TCPServer {
 
@@ -93,6 +96,9 @@ class TCPServer {
 	private BufferedReader m_inFromClient = null;
 	private boolean m_taskAvailable = true;
 
+	/**
+	 * Enum representing the types of responses the server sends to clients.
+	 */
 	public enum serverResponses {
 		tasksAvailable("1\n"), tasksUnavailable("2\n");
 
@@ -120,7 +126,7 @@ class TCPServer {
 	}
 
 	/**
-	 * CreateTasks method This is the method where the list of tasks is created
+	 * CreateTasks method - the method where the list of tasks is created
 	 * and mapped. For each task available there is a java file that represents
 	 * the code that will be sent to clients.
 	 * 
@@ -149,22 +155,20 @@ class TCPServer {
 			}
 			br.close();
 		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	/**
-	 * GetTasksList method This method concatenates all the available tasks; on
+	 * GetTasksList method - concatenates all the available tasks; on
 	 * a line are the three characteristics of a task: id, estimated complexity
 	 * and the date when it was added. Is is used when a client requests the
 	 * list of tasks to obtain the concatenated string in order to be sent to
 	 * the client.
 	 * 
-	 * @return the concatenated string containing all available tasks
+	 * @return 	the concatenated string containing all available tasks
 	 */
 	private String GetTasksList() {
 		String list = "";
@@ -176,9 +180,9 @@ class TCPServer {
 	}
 
 	/**
-	 * SendTasksList method This method is responsible if sending the list of
+	 * SendTasksList method - is responsible if sending the list of
 	 * available tasks to the client that requested it. It verifies if there are
-	 * tasks available and sends the appropiate response to the client and if
+	 * tasks available and sends the appropriate response to the client and if
 	 * there are tasks available, it gets the concatenated string by calling the
 	 * GetTasksList method and sends it through a DataOutputStream to the
 	 * client.
@@ -204,7 +208,7 @@ class TCPServer {
 	}
 
 	/**
-	 * SendTask method This method is responsible for sending the java file for
+	 * SendTask method - is responsible for sending the java file for
 	 * the corresponding task that was requested by a client. It first receives
 	 * the id of the task requested and then it retrieves and sends to the
 	 * client the information about that task (name of the file corresponding to
@@ -283,10 +287,10 @@ class TCPServer {
 	}
 
 	/**
-	 * StartListening method This method sets up the connection between server
+	 * StartListening method - sets up the connection between server
 	 * and clients. It receives the requests from clients and calls the
-	 * appropiate functions to deal with the requests. The method also receives
-	 * the result of the taks sent by a client and prints it in the console.
+	 * appropriate functions to deal with the requests. The method also receives
+	 * the result of the tasks sent by a client and prints it in the console.
 	 * 
 	 * @return void
 	 */
