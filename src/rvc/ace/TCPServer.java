@@ -32,9 +32,16 @@ class Task{
 	public String GetAsString()	{
 		return (id + " " + String.valueOf(complexity) + " " + added.toString() + "\n");
 	}
-	
+		
 	public int compareTo(Task other)	{
 		return (int) (other.complexity-this.complexity);
+	}
+	
+	public void print()
+	{
+		System.out.println("Task id: "+id);
+		System.out.println("Task complexity "+complexity);
+		System.out.println("Task date "+added);
 	}
 }
 
@@ -84,9 +91,9 @@ class TCPServer {
 			e.printStackTrace();
 		}
 		m_tasksList.add(tsk);
-		m_tasksMap.put(tsk.id, "text java ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f\n");
+		m_tasksMap.put(tsk.id, "text java ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f");
 		
-		/*tsk = new Task();
+		tsk = new Task();
 		tsk.id = "2";
 		tsk.complexity = 0.0f;
 		date_s = "2015-06-11 12:41:00.0";
@@ -97,13 +104,14 @@ class TCPServer {
 		}
 		m_tasksList.add(tsk);
 		m_tasksMap.put(tsk.id, "text java ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f");
-		*/
+		
 	}
 	
 	private String GetTasksList() {
 		String list = "";
 		for (Task t : m_tasksList) {
-			list = list + t.GetAsString() ;			
+			if(m_tasksMap.containsKey(t.id))
+				list = list + t.GetAsString() ;			
 		}
 		return list;	
 	}
@@ -141,7 +149,7 @@ class TCPServer {
 					finish = fileInfo.indexOf(" ", start);
 					String extension = fileInfo.substring(start, finish);
 					DataOutputStream outputString = new DataOutputStream(m_connectionSocket.getOutputStream());
-					outputString.writeBytes(fileInfo);
+					outputString.writeBytes(fileInfo+"\n");
 					File myFile = new File(projectDir + "\\Tasks\\" + fileName+"."+extension);
 
 					byte[] mybytearray = new byte[(int) myFile.length()];
@@ -169,7 +177,6 @@ class TCPServer {
 						m_inFromClient = new BufferedReader(new InputStreamReader(m_connectionSocket.getInputStream()));
 
 						m_tasksMap.remove(taskID);
-						
 					} catch (IOException ex) {
 						ex.printStackTrace();
 					}

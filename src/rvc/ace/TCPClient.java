@@ -118,20 +118,14 @@ class TCPClient {
 		newTask.complexity = Float.parseFloat(task.substring(start, finish));
 	
 		start = finish + 1;
-		/*DateFormat formatter = new SimpleDateFormat("EEE MMM d HH:mm:ss zzzz yyyy");
+		DateFormat formatter = new SimpleDateFormat("EEE MMM d HH:mm:ss zzzz yyyy");
 		String strDate = task.substring(start, task.length());
 		try {
 			newTask.added = formatter.parse(strDate);
 		} catch (ParseException e) {
 			e.printStackTrace();
-		}*/
-		String date_s = "2015-05-18 16:21:00.0";
-        SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        try {
-			newTask.added = dt.parse(date_s);
-		} catch (ParseException e) {
-			e.printStackTrace();
 		}
+        
 		return newTask;
 	}
 
@@ -165,6 +159,7 @@ class TCPClient {
 				m_currentTask = availableTasks.get(0);
 				m_tasksAvailable=true;
 				System.out.println("Finished receiving task info....");
+				m_currentTask.print();
 				
 				getFile();
 			} else {
