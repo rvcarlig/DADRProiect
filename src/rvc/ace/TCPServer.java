@@ -258,6 +258,12 @@ class TCPServer {
 						bis.close();
 						fis.close();
 					}
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 					m_outToClient.write(mybytearray, 0, mybytearray.length);
 
 					m_outToClient.flush();
