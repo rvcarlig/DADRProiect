@@ -86,8 +86,7 @@ class TCPClient {
 	/**
 	 * restartStreams method - restarts the streams for the
 	 * client-server communication.
-	 * 
-	 * @return void
+	 * @throws IOException
 	 */
 	private void restartStreams() throws IOException {
 		m_outputStream = new customDataOutputStream(
@@ -106,8 +105,6 @@ class TCPClient {
 	 * task, runs the code and returns the result. When there are no more tasks
 	 * available, the method returns and it means that all the tasks were
 	 * processed and the results were sent to the server.
-	 * 
-	 * @return void
 	 */
 	public void startListening() {
 		if (m_clientSocket == null)
@@ -137,8 +134,6 @@ class TCPClient {
 	 * server. It also sorts the tasks and chooses the appropriate task to be
 	 * requested from the server by calling the getFile method. The client is
 	 * now set to ‚busy’ until the task is done.
-	 * 
-	 * @return void
 	 */
 	private void getTasksList() {
 
@@ -189,8 +184,6 @@ class TCPClient {
 	 * resolved. Then, it receives the info about the task and the file to run.
 	 * After it finishes receiving, it calls the executeFile method where the
 	 * code is executed and the result is received.
-	 * 
-	 * @return void
 	 */
 	private void getFile() {
 		byte[] aByte = new byte[4];
@@ -242,13 +235,12 @@ class TCPClient {
 	 * the file received for the current task, since the result was received and
 	 * the file is no longer needed.
 	 * 
-	 * @param fileName
+	 * @param filename
 	 *            a string containing the file name corresponding to the current task
 	 * @param extension
 	 *            a string containing the extension of the file
 	 * @param arguments
 	 *            a string containing the arguments
-	 * @return void
 	 */
 	private void executeFile(String filename, String extension, String arguments) {
 		boolean error = false;
@@ -308,7 +300,6 @@ class TCPClient {
 	 * 
 	 * @param result
 	 *            a string containing the result to be sent to the server
-	 * @return void
 	 */
 	private void sendResult(String result) {
 		try {

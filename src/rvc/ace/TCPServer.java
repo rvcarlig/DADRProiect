@@ -129,8 +129,6 @@ class TCPServer {
 	 * CreateTasks method - the method where the list of tasks is created
 	 * and mapped. For each task available there is a java file that represents
 	 * the code that will be sent to clients.
-	 * 
-	 * @return void
 	 */
 	public void CreateTasks() {
 
@@ -186,8 +184,7 @@ class TCPServer {
 	 * there are tasks available, it gets the concatenated string by calling the
 	 * GetTasksList method and sends it through a DataOutputStream to the
 	 * client.
-	 * 
-	 * @return void
+	 * @throws IOException
 	 */
 	private void SendTasksList() throws IOException {
 		if (m_outToClient != null) {
@@ -215,8 +212,7 @@ class TCPServer {
 	 * the task, the extension of the file and the arguments needed to run the
 	 * file). Afterwards, the file is sent to the client and it is removed from
 	 * the list of available tasks.
-	 * 
-	 * @return void
+	 * @throws IOException
 	 */
 	private void SendTask() throws IOException {
 		if (m_outToClient != null) {
@@ -291,8 +287,6 @@ class TCPServer {
 	 * and clients. It receives the requests from clients and calls the
 	 * appropriate functions to deal with the requests. The method also receives
 	 * the result of the tasks sent by a client and prints it in the console.
-	 * 
-	 * @return void
 	 */
 	private void StartListening() {
 
